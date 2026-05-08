@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FeFET Simulator — Ferroelectric Field Effect Transistor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Particle Background -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">
+    <span class="logo-icon">⬡</span>
+    <span>FeFET<em>Sim</em></span>
+  </div>
+  <div class="nav-links">
+    <a href="#principle">Principle</a>
+    <a href="#simulator">Simulator</a>
+    <a href="#memory">Memory</a>
+    <a href="#analysis">Analysis</a>
+    <a href="#about">About</a>
+  </div>
+  <div class="nav-badge">Interactive Simulation v2.0</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-tag">SEMICONDUCTOR PHYSICS · MEMORY TECHNOLOGY</div>
+  <h1 class="hero-title">
+    Ferroelectric<br>
+    <span class="hero-accent">Field Effect</span><br>
+    Transistor
+  </h1>
+  <p class="hero-sub">An interactive simulation environment for studying FeFET operation, polarization switching, threshold voltage modulation, and non-volatile memory behavior.</p>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-n">10⁸</span><span class="hstat-l">On/Off Ratio</span></div>
+    <div class="hstat-div"></div>
+    <div class="hstat"><span class="hstat-n">~1V</span><span class="hstat-l">Memory Window</span></div>
+    <div class="hstat-div"></div>
+    <div class="hstat"><span class="hstat-n">HZO</span><span class="hstat-l">Ferroelectric</span></div>
+    <div class="hstat-div"></div>
+    <div class="hstat"><span class="hstat-n">&lt;5ns</span><span class="hstat-l">Switch Speed</span></div>
+  </div>
+  <a href="#simulator" class="hero-cta">Launch Simulator</a>
+</section>
+
+<!-- PRINCIPLE SECTION -->
+<section class="section" id="principle">
+  <div class="section-header">
+    <span class="section-tag">01 — WORKING PRINCIPLE</span>
+    <h2>How FeFET Works</h2>
+    <p>A FeFET integrates a ferroelectric layer into the gate stack of a conventional MOSFET. The spontaneous polarization of this layer shifts the threshold voltage, enabling non-volatile binary memory storage.</p>
+  </div>
+
+  <div class="principle-grid">
+    <div class="pcard">
+      <div class="pcard-num">01</div>
+      <div class="pcard-icon">⬡</div>
+      <h3>Ferroelectric Layer</h3>
+      <p>Hafnium Zirconium Oxide (HZO) or BaTiO₃ acts as the gate insulator. Its crystal lattice can maintain two stable polarization states without an applied field — the foundation of non-volatility.</p>
+    </div>
+    <div class="pcard">
+      <div class="pcard-num">02</div>
+      <div class="pcard-icon">↕</div>
+      <h3>Polarization Switching</h3>
+      <p>Applying a voltage pulse above the coercive field (E_c) flips the dipole alignment. Polarization UP (P↑) and DOWN (P↓) represent the two memory states — analogous to "0" and "1".</p>
+    </div>
+    <div class="pcard">
+      <div class="pcard-num">03</div>
+      <div class="pcard-icon">Δ</div>
+      <h3>Threshold Voltage Shift</h3>
+      <p>Each polarization state induces a different charge distribution at the semiconductor interface, shifting V_th by ΔV_th = qP_r/C_ox. This memory window separates the two states during a read operation.</p>
+    </div>
+    <div class="pcard">
+      <div class="pcard-num">04</div>
+      <div class="pcard-icon">⊙</div>
+      <h3>Non-Destructive Read</h3>
+      <p>Unlike FeRAM, FeFET reads are non-destructive. A read voltage between the two V_th values produces a high or low current, distinguishing states without disturbing the polarization.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN SIMULATOR -->
+<section class="section" id="simulator">
+  <div class="section-header">
+    <span class="section-tag">02 — INTERACTIVE SIMULATOR</span>
+    <h2>Device Simulator</h2>
+    <p>Adjust gate voltage, drain voltage, and material parameters. Observe real-time changes in device behavior, channel formation, and memory state.</p>
+  </div>
+
+  <div class="sim-layout">
+
+    <!-- Left: Device + Cross-section -->
+    <div class="sim-left">
+      <div class="sim-card device-card">
+        <div class="sim-card-title">Cross-Section View</div>
+        <svg id="device-svg" viewBox="0 0 360 300" width="100%">
+          <defs>
+            <marker id="arrM" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+            <pattern id="sub-hatch" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#1e3a5f" stroke-width="1"/>
+            </pattern>
+            <filter id="glow-filter">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- Gate contact wire -->
+          <line x1="180" y1="8" x2="180" y2="22" stroke="#a8c4e0" stroke-width="2"/>
+          <text x="200" y="17" style="font-size:11px;fill:#7aa8d0;font-family:'Space Mono',monospace;">V_G</text>
+          <circle cx="180" cy="8" r="3" fill="#64a8d8"/>
+
+          <!-- Gate Metal -->
+          <rect x="80" y="22" width="200" height="22" rx="3" fill="#1a3a5c" stroke="#3a7cb8" stroke-width="0.8"/>
+          <text x="180" y="35" text-anchor="middle" style="font-size:10px;fill:#7ab0d8;font-family:'Space Mono',monospace;font-weight:700;">GATE (TiN Metal)</text>
+
+          <!-- FE Layer - animated -->
+          <rect id="fe-rect" x="80" y="48" width="200" height="28" rx="2" fill="#0d1f3a" stroke="#4a6fa8" stroke-width="0.8"/>
+          <text x="180" y="62" text-anchor="middle" style="font-size:10px;fill:#8890c8;font-family:'Space Mono',monospace;font-weight:700;">FERROELECTRIC (HZO)</text>
+
+          <!-- Dipole arrows -->
+          <g id="dipole-group">
+            <line class="dipole" x1="100" y1="70" x2="100" y2="52" stroke="#6868d8" stroke-width="1.5" marker-end="url(#arrM)"/>
+            <line class="dipole" x1="122" y1="70" x2="122" y2="52" stroke="#6868d8" stroke-width="1.5" marker-end="url(#arrM)"/>
+            <line class="dipole" x1="144" y1="70" x2="144" y2="52" stroke="#6868d8" stroke-width="1.5" marker-end="url(#arrM)"/>
+            <line class="dipole" x1="166" y1="70" x2="166" y2="52" stroke="#6868d8" stroke-width="1.5" marker-end="url(#arrM)"/>
+            <line class="dipole" x1="188" y1="70" x2="188" y2="52" stroke="#6868d8" stroke-width="1.5" marker-end="url(#arrM)"/>
+            <line class="dipole" x1="210" y1="70" x2="210" y2="52" stroke="#6868d8" stroke-width="1.5" marker-end="url(#arrM)"/>
+            <line class="dipole" x1="232" y1="70" x2="232" y2="52" stroke="#6868d8" stroke-width="1.5" marker-end="url(#arrM)"/>
+            <line class="dipole" x1="254" y1="70" x2="254" y2="52" stroke="#6868d8" stroke-width="1.5" marker-end="url(#arrM)"/>
+          </g>
+
+          <!-- Gate Oxide -->
+          <rect x="80" y="80" width="200" height="16" rx="1" fill="#081525" stroke="#2a4a7a" stroke-width="0.8"/>
+          <text x="180" y="91" text-anchor="middle" style="font-size:9px;fill:#4a7aaa;font-family:'Space Mono',monospace;">GATE OXIDE (SiO₂)</text>
+
+          <!-- Channel -->
+          <rect id="channel-rect" x="80" y="100" width="200" height="32" rx="0" fill="#061220" stroke="#1a4a7a" stroke-width="0.8"/>
+          <text id="channel-txt" x="180" y="118" text-anchor="middle" style="font-size:10px;fill:#3a6aaa;font-family:'Space Mono',monospace;font-weight:700;">CHANNEL (p-Si)</text>
+
+          <!-- Current flow -->
+          <g id="current-group" opacity="0" style="transition:opacity 0.5s;">
+            <line x1="84" y1="116" x2="276" y2="116" stroke="#00e5a0" stroke-width="2.5" stroke-dasharray="8 5" marker-end="url(#arrM)"/>
+            <text x="180" y="110" text-anchor="middle" style="font-size:9px;fill:#00e5a0;font-family:'Space Mono',monospace;">I_DS flowing</text>
+          </g>
+
+          <!-- Source block -->
+          <rect x="22" y="96" width="60" height="40" rx="4" fill="#0d1f3a" stroke="#2a5a9a" stroke-width="0.8"/>
+          <text x="52" y="113" text-anchor="middle" style="font-size:11px;fill:#5a9aca;font-family:'Space Mono',monospace;font-weight:700;">S</text>
+          <text x="52" y="126" text-anchor="middle" style="font-size:9px;fill:#3a6a9a;font-family:'Space Mono',monospace;">n⁺</text>
+          <line x1="52" y1="136" x2="52" y2="150" stroke="#2a5a9a" stroke-width="1.5"/>
+          <text x="52" y="160" text-anchor="middle" style="font-size:9px;fill:#3a5a7a;font-family:'Space Mono',monospace;">GND</text>
+
+          <!-- Drain block -->
+          <rect x="278" y="96" width="60" height="40" rx="4" fill="#0d1f3a" stroke="#2a5a9a" stroke-width="0.8"/>
+          <text x="308" y="113" text-anchor="middle" style="font-size:11px;fill:#5a9aca;font-family:'Space Mono',monospace;font-weight:700;">D</text>
+          <text x="308" y="126" text-anchor="middle" style="font-size:9px;fill:#3a6a9a;font-family:'Space Mono',monospace;">n⁺</text>
+          <line x1="308" y1="136" x2="308" y2="150" stroke="#2a5a9a" stroke-width="1.5"/>
+          <text id="vd-label" x="308" y="160" text-anchor="middle" style="font-size:9px;fill:#3a5a7a;font-family:'Space Mono',monospace;">V_D</text>
+
+          <!-- Substrate -->
+          <rect x="22" y="136" width="316" height="30" fill="url(#sub-hatch)" stroke="#1a3a5a" stroke-width="0.5"/>
+          <text x="180" y="155" text-anchor="middle" style="font-size:9px;fill:#2a4a6a;font-family:'Space Mono',monospace;">p-Si SUBSTRATE</text>
+
+          <!-- Polarization state + readout -->
+          <rect x="20" y="178" width="320" height="110" rx="6" fill="#050e1f" stroke="#152a4a" stroke-width="0.5"/>
+
+          <text x="36" y="198" style="font-size:9px;fill:#3a6a9a;font-family:'Space Mono',monospace;letter-spacing:0.08em;">POLARIZATION STATE</text>
+          <text id="pol-label" x="36" y="216" style="font-size:14px;fill:#6868d8;font-family:'Syne',sans-serif;font-weight:700;">P↑  UP  —  Write "0"</text>
+
+          <text x="36" y="238" style="font-size:9px;fill:#3a6a9a;font-family:'Space Mono',monospace;letter-spacing:0.08em;">THRESHOLD VOLTAGE</text>
+          <text id="vth-svg" x="36" y="256" style="font-size:14px;fill:#a8d0f0;font-family:'Space Mono',monospace;font-weight:700;">V_th = +1.5 V</text>
+
+          <text x="36" y="274" style="font-size:9px;fill:#3a6a9a;font-family:'Space Mono',monospace;letter-spacing:0.08em;">DEVICE STATE</text>
+          <text id="state-svg" x="36" y="288" style="font-size:14px;fill:#ff4466;font-family:'Syne',sans-serif;font-weight:700;">● OFF — No Channel</text>
+
+          <!-- On/off indicator light -->
+          <circle id="state-dot" cx="328" cy="235" r="12" fill="#ff4466" opacity="0.15"/>
+          <circle id="state-dot-inner" cx="328" cy="235" r="6" fill="#ff4466"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Right: Controls + Metrics -->
+    <div class="sim-right">
+      <div class="sim-card">
+        <div class="sim-card-title">Simulation Controls</div>
+        <div class="ctrl-group">
+          <div class="ctrl-row">
+            <label>Gate Voltage (V_G) <span id="vg-out">0.0 V</span></label>
+            <input type="range" id="vg" min="-3" max="3" step="0.05" value="0">
+          </div>
+          <div class="ctrl-row">
+            <label>Drain Voltage (V_D) <span id="vd-out">0.5 V</span></label>
+            <input type="range" id="vd" min="0.1" max="3" step="0.05" value="0.5">
+          </div>
+          <div class="ctrl-row">
+            <label>Remnant Polarization P_r <span id="pr-out">15 µC/cm²</span></label>
+            <input type="range" id="pr" min="5" max="35" step="0.5" value="15">
+          </div>
+          <div class="ctrl-row">
+            <label>Channel Mobility µ <span id="mu-out">400 cm²/Vs</span></label>
+            <input type="range" id="mu" min="100" max="800" step="10" value="400">
+          </div>
+          <div class="ctrl-row">
+            <label>Temperature T <span id="temp-out">300 K</span></label>
+            <input type="range" id="temp" min="200" max="450" step="5" value="300">
+          </div>
+        </div>
+
+        <div class="write-btns">
+          <button id="btn-up" class="write-btn write-p-up" onclick="setPol('up')">↑ Write "0"<br><small>P UP — High V_th</small></button>
+          <button id="btn-dn" class="write-btn write-p-dn" onclick="setPol('down')">↓ Write "1"<br><small>P DOWN — Low V_th</small></button>
+        </div>
+        <button class="read-btn" onclick="doRead()">◉ READ Operation</button>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-grid">
+        <div class="mcard">
+          <div class="mcard-label">Drain Current I_D</div>
+          <div class="mcard-val" id="m-id">0.00 <small>µA</small></div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-label">Threshold Voltage V_th</div>
+          <div class="mcard-val" id="m-vth">+1.5 <small>V</small></div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-label">Memory Window ΔV_th</div>
+          <div class="mcard-val" id="m-win">2.0 <small>V</small></div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-label">On/Off Ratio</div>
+          <div class="mcard-val" id="m-ratio">—</div>
+        </div>
+        <div class="mcard mcard-state" id="mcard-state">
+          <div class="mcard-label">Memory State</div>
+          <div class="mcard-val" id="m-state">OFF</div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-label">Gate Overdrive V_GS−V_th</div>
+          <div class="mcard-val" id="m-od">−1.50 <small>V</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHARTS SECTION -->
+<section class="section" id="analysis">
+  <div class="section-header">
+    <span class="section-tag">03 — ELECTRICAL ANALYSIS</span>
+    <h2>Transfer & Output Characteristics</h2>
+    <p>Real-time plots showing I-V characteristics for both polarization states, hysteresis loop, and output curves.</p>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Transfer Curve — I_D vs V_G</div>
+      <div class="chart-sub">Demonstrates the memory window between P↑ and P↓ states</div>
+      <div style="position:relative;height:240px;">
+        <canvas id="tc-chart" role="img" aria-label="Transfer characteristic showing drain current vs gate voltage for both polarization states"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">P-E Hysteresis Loop</div>
+      <div class="chart-sub">Polarization vs Electric Field — the ferroelectric signature</div>
+      <div style="position:relative;height:240px;">
+        <canvas id="pe-chart" role="img" aria-label="Polarization vs Electric Field hysteresis loop showing bistable ferroelectric switching"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Output Curves — I_D vs V_DS</div>
+      <div class="chart-sub">Linear and saturation regions at different V_GS values</div>
+      <div style="position:relative;height:240px;">
+        <canvas id="oc-chart" role="img" aria-label="Output characteristics showing drain current vs drain voltage for multiple gate bias levels"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Switching Event Log</div>
+      <div class="chart-sub">Timeline of polarization write/read operations</div>
+      <div id="event-log" class="event-log">
+        <div class="event-empty">No events yet — use Write buttons above</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MEMORY SECTION -->
+<section class="section" id="memory">
+  <div class="section-header">
+    <span class="section-tag">04 — MEMORY APPLICATIONS</span>
+    <h2>FeFET as Non-Volatile Memory</h2>
+    <p>Understanding how FeFET enables next-generation storage with in-memory computing capabilities.</p>
+  </div>
+
+  <div class="memory-layout">
+    <div class="mem-compare">
+      <h3>Technology Comparison</h3>
+      <table class="comp-table">
+        <thead>
+          <tr><th>Parameter</th><th>FeFET</th><th>Flash</th><th>DRAM</th><th>FeRAM</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Non-volatile</td><td class="good">✓</td><td class="good">✓</td><td class="bad">✗</td><td class="good">✓</td></tr>
+          <tr><td>Read type</td><td class="good">Non-destr.</td><td class="good">Non-destr.</td><td class="good">Non-destr.</td><td class="bad">Destructive</td></tr>
+          <tr><td>Write voltage</td><td class="good">~3V</td><td class="bad">12–20V</td><td class="good">~1V</td><td class="med">~1.5V</td></tr>
+          <tr><td>Endurance</td><td class="med">10⁶–10⁹</td><td class="bad">10⁵</td><td class="good">&gt;10¹⁵</td><td class="good">10¹²</td></tr>
+          <tr><td>Scalability</td><td class="good">Excellent</td><td class="med">Good</td><td class="good">Excellent</td><td class="bad">Limited</td></tr>
+          <tr><td>Area/bit</td><td class="good">1T</td><td class="good">1T</td><td class="med">1T+1C</td><td class="bad">1T+1C</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mem-apps">
+      <h3>Key Applications</h3>
+      <div class="app-list">
+        <div class="app-item">
+          <div class="app-icon">⬡</div>
+          <div>
+            <div class="app-name">Neuromorphic Computing</div>
+            <div class="app-desc">Multi-level FeFET cells mimic synaptic weights for artificial neural networks with analog precision.</div>
+          </div>
+        </div>
+        <div class="app-item">
+          <div class="app-icon">◉</div>
+          <div>
+            <div class="app-name">In-Memory Processing</div>
+            <div class="app-desc">Compute directly in memory array — eliminates von Neumann bottleneck for AI inference workloads.</div>
+          </div>
+        </div>
+        <div class="app-item">
+          <div class="app-icon">△</div>
+          <div>
+            <div class="app-name">Edge AI Storage</div>
+            <div class="app-desc">Ultra-low power operation enables always-on AI at the edge without battery drain concerns.</div>
+          </div>
+        </div>
+        <div class="app-item">
+          <div class="app-icon">□</div>
+          <div>
+            <div class="app-name">Embedded NVM</div>
+            <div class="app-desc">CMOS-compatible fabrication allows embedded non-volatile memory in standard logic processes at 28nm and below.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="section-header">
+    <span class="section-tag">05 — ABOUT THIS PROJECT</span>
+    <h2>Simulation Objectives</h2>
+  </div>
+  <div class="obj-grid">
+    <div class="obj-card"><span class="obj-n">01</span><p>Study the working principle of FeFET devices and ferroelectric physics</p></div>
+    <div class="obj-card"><span class="obj-n">02</span><p>Analyze threshold voltage shift as a function of remnant polarization P_r</p></div>
+    <div class="obj-card"><span class="obj-n">03</span><p>Simulate switching behavior and I-V characteristics for memory applications</p></div>
+    <div class="obj-card"><span class="obj-n">04</span><p>Develop an interactive model showing ON/OFF states dynamically with real-time visualization</p></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">⬡ FeFET<em>Sim</em></div>
+    <div class="footer-note">Interactive Ferroelectric Field Effect Transistor Simulation<br>Physics models based on MOSFET square-law and Landau-Khalatnikov FE dynamics</div>
+    <div class="footer-copy">© 2025 · Educational Simulation Project</div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
